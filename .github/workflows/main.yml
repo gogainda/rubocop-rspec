@@ -7,28 +7,14 @@ on:
       - master
 
 jobs:
-  confirm_config_and_documentation:
-    runs-on: ubuntu-latest
-    name: Confirm config and documentation
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.1"
-          bundler-cache: true
-      - run: bundle exec rake confirm_config documentation_syntax_check confirm_documentation
-
   main:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         ruby:
-          - "2.6"
-          - "2.7"
-          - "3.0"
           - "3.1"
           - ruby-head
-          - jruby
+          - truffleruby-head
         task:
           - internal_investigation
           - spec
@@ -40,43 +26,3 @@ jobs:
           ruby-version: "${{ matrix.ruby }}"
           bundler-cache: true
       - run: bundle exec rake ${{ matrix.task }}
-
-  edge-rubocop:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        task:
-          - internal_investigation
-          - spec
-    name: "Edge RuboCop: ${{ matrix.task }}"
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use latest RuboCop from `master`
-        run: |
-          echo "gem 'rubocop', github: 'rubocop-hq/rubocop'" > Gemfile.local
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.1"
-          bundler-cache: true
-      - run: bundle exec rake ${{ matrix.task }}
-
-  rspec4:
-    runs-on: ubuntu-latest
-    name: RSpec 4
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use latest RSpec 4 from `4-0-dev` branch
-        run: |
-          sed -e '/rspec/d' -i Gemfile
-          cat << EOF > Gemfile.local
-            gem 'rspec', github: 'rspec/rspec', branch: '4-0-dev'
-            gem 'rspec-core', github: 'rspec/rspec-core', branch: '4-0-dev'
-            gem 'rspec-expectations', github: 'rspec/rspec-expectations', branch: '4-0-dev'
-            gem 'rspec-mocks', github: 'rspec/rspec-mocks', branch: '4-0-dev'
-            gem 'rspec-support', github: 'rspec/rspec-support', branch: '4-0-dev'
-          EOF
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.1"
-          bundler-cache: true
-      - run: bundle exec rake spec
